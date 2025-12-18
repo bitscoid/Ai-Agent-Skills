@@ -11,7 +11,8 @@ const AGENT_PATHS = {
   claude: path.join(os.homedir(), '.claude', 'skills'),
   cursor: path.join(process.cwd(), '.cursor', 'skills'),
   amp: path.join(os.homedir(), '.amp', 'skills'),
-  vscode: path.join(process.cwd(), '.vscode', 'skills'),
+  vscode: path.join(process.cwd(), '.github', 'skills'),
+  copilot: path.join(process.cwd(), '.github', 'skills'),
   project: path.join(process.cwd(), '.skills'),
   goose: path.join(os.homedir(), '.config', 'goose', 'skills'),
   opencode: path.join(os.homedir(), '.opencode', 'skills'),
@@ -220,7 +221,8 @@ ${colors.bold}Agents:${colors.reset}
   ${colors.cyan}claude${colors.reset}   (default) ~/.claude/skills/
   ${colors.cyan}cursor${colors.reset}   .cursor/skills/ in current project
   ${colors.cyan}amp${colors.reset}      ~/.amp/skills/
-  ${colors.cyan}vscode${colors.reset}   .vscode/skills/ in current project
+  ${colors.cyan}vscode${colors.reset}   .github/skills/ in current project
+  ${colors.cyan}copilot${colors.reset}  .github/skills/ (alias for vscode)
   ${colors.cyan}goose${colors.reset}    ~/.config/goose/skills/
   ${colors.cyan}opencode${colors.reset} ~/.opencode/skills/
   ${colors.cyan}project${colors.reset}  .skills/ in current directory (portable)

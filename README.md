@@ -115,7 +115,7 @@ npx ai-agent-skills info <name>
 | Claude Code | `--agent claude` (default) | `~/.claude/skills/` |
 | Cursor | `--agent cursor` | `.cursor/skills/` |
 | Amp | `--agent amp` | `~/.amp/skills/` |
-| VS Code | `--agent vscode` | `.vscode/skills/` |
+| VS Code / Copilot | `--agent vscode` | `.github/skills/` |
 | Goose | `--agent goose` | `~/.config/goose/skills/` |
 | OpenCode | `--agent opencode` | `~/.opencode/skills/` |
 | Portable | `--agent project` | `.skills/` (works with any agent) |
