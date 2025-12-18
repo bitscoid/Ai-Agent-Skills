@@ -22,7 +22,7 @@
 ## Quick Start
 
 ```bash
-npx ai-agent-skills install pdf
+npx ai-agent-skills install frontend-design
 ```
 
 That's it. The skill is now available in Claude Code, Cursor, Amp, VS Code, and all compatible agents.
