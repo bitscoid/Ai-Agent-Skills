@@ -1,0 +1,33 @@
+{
+  "name": "agent-skills",
+  "version": "1.0.0",
+  "description": "Install curated AI agent skills with one command",
+  "main": "cli.js",
+  "bin": {
+    "agent-skills": "./cli.js",
+    "skills": "./cli.js"
+  },
+  "scripts": {
+    "test": "node cli.js list"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skillcreatorai/Ai-Agent-Skills.git"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "skills",
+    "claude",
+    "cursor",
+    "amp",
+    "vscode",
+    "mcp"
+  ],
+  "author": "SkillCreator.ai",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/skillcreatorai/Ai-Agent-Skills/issues"
+  },
+  "homepage": "https://skillcreator.ai/discover"
+}
