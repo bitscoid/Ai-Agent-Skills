@@ -24,7 +24,7 @@ const AGENT_PATHS = {
   copilot: path.join(process.cwd(), '.github', 'skills'),
   project: path.join(process.cwd(), '.skills'),
   goose: path.join(os.homedir(), '.config', 'goose', 'skills'),
-  opencode: path.join(os.homedir(), '.opencode', 'skills'),
+  opencode: path.join(os.homedir(), '.opencode', 'skill'),
   codex: path.join(os.homedir(), '.codex', 'skills'),
   letta: path.join(os.homedir(), '.letta', 'skills'),
 };
