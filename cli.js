@@ -1050,7 +1050,7 @@ ${colors.bold}Agents:${colors.reset}
   ${colors.cyan}vscode${colors.reset}   .github/skills/ in current project
   ${colors.cyan}copilot${colors.reset}  .github/skills/ (alias for vscode)
   ${colors.cyan}goose${colors.reset}    ~/.config/goose/skills/
-  ${colors.cyan}opencode${colors.reset} ~/.opencode/skills/
+  ${colors.cyan}opencode${colors.reset} ~/.opencode/skill/
   ${colors.cyan}codex${colors.reset}    ~/.codex/skills/
   ${colors.cyan}letta${colors.reset}    ~/.letta/skills/
   ${colors.cyan}project${colors.reset}  .skills/ in current directory (portable)
