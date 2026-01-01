@@ -1083,17 +1083,17 @@ ${colors.bold}Options:${colors.reset}
   ${colors.cyan}--all${colors.reset}                Apply to all (with update)
   ${colors.cyan}--version, -v${colors.reset}        Show version number
 
-${colors.bold}Agents:${colors.reset}
-  ${colors.cyan}claude${colors.reset}   (default) ~/.claude/skills/
-  ${colors.cyan}cursor${colors.reset}   .cursor/skills/ in current project
+${colors.bold}Agents:${colors.reset} (install targets ALL by default)
+  ${colors.cyan}claude${colors.reset}   ~/.claude/skills/
+  ${colors.cyan}cursor${colors.reset}   .cursor/skills/ (project)
+  ${colors.cyan}codex${colors.reset}    ~/.codex/skills/
   ${colors.cyan}amp${colors.reset}      ~/.amp/skills/
-  ${colors.cyan}vscode${colors.reset}   .github/skills/ in current project
+  ${colors.cyan}vscode${colors.reset}   .github/skills/ (project)
   ${colors.cyan}copilot${colors.reset}  .github/skills/ (alias for vscode)
   ${colors.cyan}goose${colors.reset}    ~/.config/goose/skills/
   ${colors.cyan}opencode${colors.reset} ~/.opencode/skill/
-  ${colors.cyan}codex${colors.reset}    ~/.codex/skills/
   ${colors.cyan}letta${colors.reset}    ~/.letta/skills/
-  ${colors.cyan}project${colors.reset}  .skills/ in current directory (portable)
+  ${colors.cyan}project${colors.reset}  .skills/ (portable)
 
 ${colors.bold}Categories:${colors.reset}
   development, document, creative, business, productivity
