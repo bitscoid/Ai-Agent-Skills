@@ -90,3 +90,7 @@ Reply with: defaults (or 1a 2a)
 - Don't ask open-ended questions when tight multiple-choice or yes/no would eliminate ambiguity faster
 - Don't ask more than 5 questions in the first pass
 - Don't proceed with implementation while key questions remain unanswered
+
+---
+
+*Originally created by [@thsottiaux](https://x.com/thsottiaux)*

@@ -323,6 +323,7 @@
       "source": "skillcreatorai/Ai-Agent-Skills",
       "license": "MIT",
       "path": "skills/ask-questions-if-underspecified",
+      "tags": ["clarification", "requirements", "workflow", "codex"],
       "stars": 100,
       "downloads": 0,
       "featured": true,
