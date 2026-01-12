@@ -27,6 +27,7 @@ const AGENT_PATHS = {
   opencode: path.join(os.homedir(), '.config', 'opencode', 'skill'),
   codex: path.join(os.homedir(), '.codex', 'skills'),
   letta: path.join(os.homedir(), '.letta', 'skills'),
+  gemini: path.join(os.homedir(), '.gemini', 'skills'),
 };
 
 const colors = {
@@ -434,7 +435,8 @@ function showAgentInstructions(agent, skillName, destPath) {
     project: `The skill is installed in .skills/ in your current directory.\nThis makes it portable across all compatible agents.`,
     letta: `The skill is now available in Letta.`,
     goose: `The skill is now available in Goose.`,
-    opencode: `The skill is now available in OpenCode.`
+    opencode: `The skill is now available in OpenCode.`,
+    gemini: `The skill is now available in Gemini CLI.\nMake sure Agent Skills is enabled in your Gemini CLI settings.`
   };
 
   log(`${colors.dim}${instructions[agent] || `The skill is ready to use with ${agent}.`}${colors.reset}`);
@@ -1311,6 +1313,7 @@ ${colors.bold}Agents:${colors.reset} (install targets ALL by default)
   ${colors.cyan}amp${colors.reset}      ~/.amp/skills/
   ${colors.cyan}vscode${colors.reset}   .github/skills/ (project)
   ${colors.cyan}copilot${colors.reset}  .github/skills/ (alias for vscode)
+  ${colors.cyan}gemini${colors.reset}   ~/.gemini/skills/
   ${colors.cyan}goose${colors.reset}    ~/.config/goose/skills/
   ${colors.cyan}opencode${colors.reset} ~/.opencode/skill/
   ${colors.cyan}letta${colors.reset}    ~/.letta/skills/
