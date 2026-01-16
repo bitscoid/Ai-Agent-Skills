@@ -1,6 +1,6 @@
 {
   "name": "ai-agent-skills",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Install curated AI agent skills with one command. Works with Claude Code, Cursor, Codex, Gemini CLI, VS Code, Copilot, and 11+ agents.",
   "main": "cli.js",
   "bin": {
