@@ -1088,8 +1088,8 @@ function isGitUrl(source) {
 
   // SSH-style: git@host:path (with optional .git suffix and #ref)
   const sshLike = /^git@[a-zA-Z0-9._-]+:[a-zA-Z0-9._\/-]+(?:\.git)?(?:#[a-zA-Z0-9._\/-]+)?$/;
-  // Protocol URLs: https://, git://, ssh://, file://
-  const protocolLike = /^(https?|git|ssh|file):\/\/[a-zA-Z0-9._\/-]+(?:#[a-zA-Z0-9._\/-]+)?$/;
+  // Protocol URLs: https://, git://, ssh://, file:// (allows @ for user in ssh://git@host)
+  const protocolLike = /^(https?|git|ssh|file):\/\/[a-zA-Z0-9._@:\/-]+(?:#[a-zA-Z0-9._\/-]+)?$/;
 
   return sshLike.test(source) || protocolLike.test(source);
 }
