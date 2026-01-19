@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/skills-40-blue?style=flat-square" alt="Skills" />
-  <img src="https://img.shields.io/badge/agents-10+-green?style=flat-square" alt="Compatible Agents" />
+  <img src="https://img.shields.io/badge/agents-11+-green?style=flat-square" alt="Compatible Agents" />
   <img src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square" alt="License" />
   <img src="https://img.shields.io/npm/v/ai-agent-skills?style=flat-square&color=red" alt="npm" />
   <img src="https://img.shields.io/npm/dt/ai-agent-skills?style=flat-square&color=orange" alt="Downloads" />
@@ -42,11 +42,14 @@ npx ai-agent-skills browse
 npx ai-agent-skills install anthropics/skills
 npx ai-agent-skills install anthropics/skills/pdf    # specific skill
 
+# Install from any git URL (SSH or HTTPS)
+npx ai-agent-skills install git@github.com:anthropics/skills.git
+
 # Install from local path
 npx ai-agent-skills install ./my-custom-skill
 ```
 
-**One command. Every agent.** By default, skills install to Claude Code, Cursor, Codex, Amp, VS Code, Copilot, Goose, Letta, Kilo Code, and OpenCode simultaneously.
+**One command. Every agent.** By default, skills install to Claude Code, Cursor, Codex, Amp, VS Code, Copilot, Gemini CLI, Goose, Letta, Kilo Code, and OpenCode simultaneously.
 
 ## Why This Exists
 
@@ -56,7 +59,7 @@ We also created our own repo to cureate the best in one place. Quality over quan
 
 ## Compatible Agents
 
-Works with **Claude Code**, **Cursor**, **Codex**, **Amp**, **VS Code**, **GitHub Copilot**, **Goose**, **Letta**, **Kilo Code**, and **OpenCode**.
+Works with **Claude Code**, **Cursor**, **Codex**, **Amp**, **VS Code**, **GitHub Copilot**, **Gemini CLI**, **Goose**, **Letta**, **Kilo Code**, and **OpenCode**.
 
 ## Available Skills
 
@@ -135,6 +138,7 @@ npx ai-agent-skills list --installed --agent cursor
 npx ai-agent-skills install <name>                    # installs to ALL agents
 npx ai-agent-skills install <name> --agent cursor     # install to specific agent only
 npx ai-agent-skills install <owner/repo>              # from GitHub (all agents)
+npx ai-agent-skills install <git-url>                 # from any git URL (ssh/https)
 npx ai-agent-skills install ./path                    # from local path (all agents)
 npx ai-agent-skills install <name> --dry-run          # preview only
 
@@ -162,6 +166,7 @@ By default, `install` targets **all agents**. Use `--agent <name>` to install to
 | Codex | `--agent codex` | `~/.codex/skills/` |
 | Amp | `--agent amp` | `~/.amp/skills/` |
 | VS Code / Copilot | `--agent vscode` | `.github/skills/` |
+| Gemini CLI | `--agent gemini` | `~/.gemini/skills/` |
 | Goose | `--agent goose` | `~/.config/goose/skills/` |
 | OpenCode | `--agent opencode` | `~/.opencode/skill/` |
 | Letta | `--agent letta` | `~/.letta/skills/` |

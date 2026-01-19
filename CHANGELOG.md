@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2025-01-13
+
+### Added
+- **Gemini CLI support**: New `--agent gemini` flag installs to `~/.gemini/skills/`
+- Google's Gemini CLI added to default multi-agent install
+
+### Changed
+- Now supports 11 agents (was 10)
+- Updated README with Gemini CLI documentation
+- Updated package description and keywords
+
 ## [1.1.0] - 2024-12-20
 
 ### Added

@@ -28,6 +28,7 @@ const AGENT_PATHS = {
   codex: path.join(os.homedir(), '.codex', 'skills'),
   letta: path.join(os.homedir(), '.letta', 'skills'),
   kilocode: path.join(os.homedir(), '.kilocode', 'skills'),
+  gemini: path.join(os.homedir(), '.gemini', 'skills'),
 };
 
 const colors = {
@@ -437,6 +438,7 @@ function showAgentInstructions(agent, skillName, destPath) {
     goose: `The skill is now available in Goose.`,
     opencode: `The skill is now available in OpenCode.`,
     kilocode: `The skill is now available in Kilo Code.\nKiloCode will automatically detect and use it.`,
+    gemini: `The skill is now available in Gemini CLI.\nMake sure Agent Skills is enabled in your Gemini CLI settings.`
   };
 
   log(`${colors.dim}${instructions[agent] || `The skill is ready to use with ${agent}.`}${colors.reset}`);
@@ -620,6 +622,93 @@ function updateFromGitHub(meta, skillName, agent, destPath, dryRun) {
   }
 }
 
+function updateFromGitUrl(meta, skillName, agent, destPath, dryRun) {
+  const { execFileSync } = require('child_process');
+  const parsed = parseGitUrl(meta.url);
+  const url = parsed.url;
+  const ref = meta.ref || parsed.ref;
+
+  // Validate URL from metadata
+  try {
+    validateGitUrl(url);
+  } catch (e) {
+    error(`Invalid git URL in metadata: ${e.message}. Try reinstalling the skill.`);
+    return false;
+  }
+
+  if (dryRun) {
+    log(`\n${colors.bold}Dry Run${colors.reset} (no changes made)\n`);
+    info(`Would update: ${skillName} (from git:${url}${ref ? `#${ref}` : ''})`);
+    info(`Agent: ${agent}`);
+    info(`Path: ${destPath}`);
+    return true;
+  }
+
+  // Use secure temp directory creation
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-skills-update-'));
+
+  try {
+    info(`Updating ${skillName} from ${url}${ref ? `#${ref}` : ''}...`);
+    const cloneArgs = ['clone', '--depth', '1'];
+    if (ref) {
+      cloneArgs.push('--branch', ref);
+    }
+    cloneArgs.push(url, tempDir);
+    execFileSync('git', cloneArgs, { stdio: 'pipe' });
+
+    let sourcePath;
+    if (meta.isRootSkill) {
+      sourcePath = tempDir;
+    } else if (meta.skillPath) {
+      const skillsSubdir = path.join(tempDir, 'skills', meta.skillPath);
+      const directPath = path.join(tempDir, meta.skillPath);
+      sourcePath = fs.existsSync(skillsSubdir) ? skillsSubdir : directPath;
+    } else {
+      sourcePath = tempDir;
+    }
+
+    if (!fs.existsSync(sourcePath) || !fs.existsSync(path.join(sourcePath, 'SKILL.md'))) {
+      error(`Skill not found in repository ${url}`);
+      fs.rmSync(tempDir, { recursive: true });
+      return false;
+    }
+
+    fs.rmSync(destPath, { recursive: true });
+    copyDir(sourcePath, destPath);
+
+    // Sanitize URL before storing
+    const sanitizedUrl = sanitizeGitUrl(url);
+
+    writeSkillMeta(destPath, {
+      ...meta,
+      source: 'git',
+      url: sanitizedUrl,
+      ref: ref || null
+    });
+
+    fs.rmSync(tempDir, { recursive: true });
+
+    success(`\nUpdated: ${skillName}`);
+    info(`Source: git:${url}${ref ? `#${ref}` : ''}`);
+    info(`Agent: ${agent}`);
+    info(`Location: ${destPath}`);
+    return true;
+  } catch (e) {
+    // Provide more helpful error messages for common git failures
+    let errorMsg = e.message;
+    if (e.message.includes('not found') || e.message.includes('Repository not found')) {
+      errorMsg = `Repository not found. The URL may have changed or been removed.`;
+    } else if (e.message.includes('Authentication failed') || e.message.includes('Permission denied')) {
+      errorMsg = `Authentication failed. Check your credentials or SSH key.`;
+    } else if (e.message.includes('Could not resolve host')) {
+      errorMsg = `Could not resolve host. Check your network connection.`;
+    }
+    error(`Failed to update from git: ${errorMsg}`);
+    try { fs.rmSync(tempDir, { recursive: true }); } catch {}
+    return false;
+  }
+}
+
 // Update from local path
 function updateFromLocalPath(meta, skillName, agent, destPath, dryRun) {
   const sourcePath = meta.path;
@@ -696,6 +785,8 @@ function updateSkill(skillName, agent = 'claude', dryRun = false) {
   switch (meta.source) {
     case 'github':
       return updateFromGitHub(meta, skillName, agent, destPath, dryRun);
+    case 'git':
+      return updateFromGitUrl(meta, skillName, agent, destPath, dryRun);
     case 'local':
       return updateFromLocalPath(meta, skillName, agent, destPath, dryRun);
     case 'registry':
@@ -991,6 +1082,96 @@ function isGitHubUrl(source) {
          !isWindowsPath(source);
 }
 
+function isGitUrl(source) {
+  if (!source || typeof source !== 'string') return false;
+
+  // Avoid treating local filesystem paths as git URLs
+  if (isLocalPath(source)) return false;
+
+  // SSH-style: git@host:path (with optional .git suffix and #ref)
+  const sshLike = /^git@[a-zA-Z0-9._-]+:[a-zA-Z0-9._\/-]+(?:\.git)?(?:#[a-zA-Z0-9._\/-]+)?$/;
+  // Protocol URLs: https://, git://, ssh://, file:// (allows @ for user in ssh://git@host)
+  const protocolLike = /^(https?|git|ssh|file):\/\/[a-zA-Z0-9._@:\/-]+(?:#[a-zA-Z0-9._\/-]+)?$/;
+
+  return sshLike.test(source) || protocolLike.test(source);
+}
+
+function parseGitUrl(source) {
+  if (!source || typeof source !== 'string') return { url: null, ref: null };
+  // Split on first # only (ref might contain special chars)
+  const hashIndex = source.indexOf('#');
+  if (hashIndex === -1) {
+    return { url: source, ref: null };
+  }
+  return {
+    url: source.slice(0, hashIndex),
+    ref: source.slice(hashIndex + 1) || null
+  };
+}
+
+function getRepoNameFromUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+
+  // Remove trailing slashes and .git suffix
+  let cleaned = url.replace(/\/+$/, '').replace(/\.git$/, '');
+
+  // Handle SSH URLs: git@host:org/repo -> extract 'repo'
+  if (cleaned.includes('@') && cleaned.includes(':')) {
+    const colonIndex = cleaned.lastIndexOf(':');
+    const pathPart = cleaned.slice(colonIndex + 1);
+    const segments = pathPart.split('/').filter(Boolean);
+    return segments.length > 0 ? segments[segments.length - 1] : null;
+  }
+
+  // Handle protocol URLs: extract last path segment
+  const segments = cleaned.split('/').filter(Boolean);
+  return segments.length > 0 ? segments[segments.length - 1] : null;
+}
+
+// Validate git URL to prevent malformed/malicious input
+function validateGitUrl(url) {
+  if (!url || typeof url !== 'string') {
+    throw new Error('Invalid git URL: empty or not a string');
+  }
+
+  // Max reasonable URL length
+  if (url.length > 2048) {
+    throw new Error('Git URL too long (max 2048 characters)');
+  }
+
+  // Check for dangerous characters that could cause issues
+  const dangerousChars = /[\x00-\x1f\x7f`$\\]/;
+  if (dangerousChars.test(url)) {
+    throw new Error('Git URL contains invalid characters');
+  }
+
+  // Must match expected patterns
+  if (!isGitUrl(url)) {
+    throw new Error('Invalid git URL format');
+  }
+
+  return true;
+}
+
+// Sanitize URL for storage (remove credentials if present)
+function sanitizeGitUrl(url) {
+  if (!url) return url;
+  try {
+    // Handle protocol URLs
+    if (url.includes('://')) {
+      const parsed = new URL(url);
+      // Remove any embedded credentials
+      parsed.username = '';
+      parsed.password = '';
+      return parsed.toString();
+    }
+    // SSH URLs don't typically have credentials embedded
+    return url;
+  } catch {
+    return url;
+  }
+}
+
 function isWindowsPath(source) {
   // Match Windows absolute paths like C:\, D:\, etc.
   return /^[a-zA-Z]:[\\\/]/.test(source);
@@ -1184,6 +1365,148 @@ async function installFromGitHub(source, agent = 'claude', dryRun = false) {
   }
 }
 
+async function installFromGitUrl(source, agent = 'claude', dryRun = false) {
+  const { execFileSync } = require('child_process');
+  const { url, ref } = parseGitUrl(source);
+
+  // Validate URL format and safety
+  try {
+    validateGitUrl(url);
+    if (ref && !/^[a-zA-Z0-9._\/-]+$/.test(ref)) {
+      throw new Error('Invalid ref format');
+    }
+  } catch (e) {
+    error(`Invalid git URL: ${e.message}`);
+    return false;
+  }
+
+  const repoName = getRepoNameFromUrl(url);
+  if (!repoName) {
+    error('Could not determine repository name from git URL');
+    return false;
+  }
+
+  // Use secure temp directory creation
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-skills-'));
+
+  if (dryRun) {
+    log(`\n${colors.bold}Dry Run${colors.reset} (no changes made)\n`);
+    info(`Would clone: ${url}${ref ? `#${ref}` : ''}`);
+    info('Would install skills discovered in repository');
+    info(`Agent: ${agent}`);
+    return true;
+  }
+
+  try {
+    info(`Cloning ${url}${ref ? `#${ref}` : ''}...`);
+    const cloneArgs = ['clone', '--depth', '1'];
+    if (ref) {
+      cloneArgs.push('--branch', ref);
+    }
+    cloneArgs.push(url, tempDir);
+    execFileSync('git', cloneArgs, { stdio: 'pipe' });
+
+    const skillsDir = fs.existsSync(path.join(tempDir, 'skills'))
+      ? path.join(tempDir, 'skills')
+      : tempDir;
+
+    const isRootSkill = fs.existsSync(path.join(tempDir, 'SKILL.md'));
+
+    if (isRootSkill) {
+      const skillName = repoName.toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      try {
+        validateSkillName(skillName);
+      } catch (e) {
+        error(`Cannot install: repo name "${repoName}" cannot be converted to valid skill name`);
+        fs.rmSync(tempDir, { recursive: true });
+        return false;
+      }
+
+      const destDir = AGENT_PATHS[agent] || AGENT_PATHS.claude;
+      const destPath = path.join(destDir, skillName);
+
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+      }
+
+      copyDir(tempDir, destPath);
+
+      // Sanitize URL before storing in metadata
+      const sanitizedUrl = sanitizeGitUrl(url);
+
+      writeSkillMeta(destPath, {
+        source: 'git',
+        url: sanitizedUrl,
+        ref: ref || null,
+        isRootSkill: true
+      });
+
+      success(`\nInstalled: ${skillName} from ${url}`);
+      info(`Location: ${destPath}`);
+    } else {
+      const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+      let installed = 0;
+
+      // Sanitize URL before storing in metadata
+      const sanitizedUrl = sanitizeGitUrl(url);
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const skillPath = path.join(skillsDir, entry.name);
+          if (fs.existsSync(path.join(skillPath, 'SKILL.md'))) {
+            const destDir = AGENT_PATHS[agent] || AGENT_PATHS.claude;
+            const destPath = path.join(destDir, entry.name);
+
+            if (!fs.existsSync(destDir)) {
+              fs.mkdirSync(destDir, { recursive: true });
+            }
+
+            copyDir(skillPath, destPath);
+
+            writeSkillMeta(destPath, {
+              source: 'git',
+              url: sanitizedUrl,
+              ref: ref || null,
+              skillPath: entry.name
+            });
+
+            log(`  ${colors.green}✓${colors.reset} ${entry.name}`);
+            installed++;
+          }
+        }
+      }
+
+      if (installed > 0) {
+        success(`\nInstalled ${installed} skill(s) from ${url}`);
+      } else {
+        warn('No skills found in repository');
+      }
+    }
+
+    fs.rmSync(tempDir, { recursive: true });
+    return true;
+  } catch (e) {
+    // Provide more helpful error messages for common git failures
+    let errorMsg = e.message;
+    if (e.message.includes('not found') || e.message.includes('Repository not found')) {
+      errorMsg = `Repository not found. Check the URL is correct and you have access.`;
+    } else if (e.message.includes('Authentication failed') || e.message.includes('Permission denied')) {
+      errorMsg = `Authentication failed. For SSH URLs, ensure your SSH key is configured. For HTTPS, check credentials.`;
+    } else if (e.message.includes('Could not resolve host')) {
+      errorMsg = `Could not resolve host. Check your network connection and the URL.`;
+    } else if (e.message.includes('Connection refused') || e.message.includes('Connection timed out')) {
+      errorMsg = `Connection failed. Check your network connection.`;
+    }
+    error(`Failed to install from git: ${errorMsg}`);
+    try { fs.rmSync(tempDir, { recursive: true }); } catch {}
+    return false;
+  }
+}
+
 function installFromLocalPath(source, agent = 'claude', dryRun = false) {
   const sourcePath = expandPath(source);
 
@@ -1286,6 +1609,7 @@ ${colors.bold}Commands:${colors.reset}
   ${colors.green}install <name>${colors.reset}                   Install to ALL agents (default)
   ${colors.green}install <name> --agent cursor${colors.reset}    Install to specific agent only
   ${colors.green}install <owner/repo>${colors.reset}             Install from GitHub repository
+  ${colors.green}install <git-url>${colors.reset}                Install from any git URL (ssh/https)
   ${colors.green}install ./path${colors.reset}                   Install from local path
   ${colors.green}install <name> --dry-run${colors.reset}         Preview installation without changes
   ${colors.green}uninstall <name>${colors.reset}                 Remove an installed skill
@@ -1313,6 +1637,7 @@ ${colors.bold}Agents:${colors.reset} (install targets ALL by default)
   ${colors.cyan}amp${colors.reset}      ~/.amp/skills/
   ${colors.cyan}vscode${colors.reset}   .github/skills/ (project)
   ${colors.cyan}copilot${colors.reset}  .github/skills/ (alias for vscode)
+  ${colors.cyan}gemini${colors.reset}   ~/.gemini/skills/
   ${colors.cyan}goose${colors.reset}    ~/.config/goose/skills/
   ${colors.cyan}opencode${colors.reset} ~/.opencode/skill/
   ${colors.cyan}letta${colors.reset}    ~/.letta/skills/
@@ -1323,13 +1648,14 @@ ${colors.bold}Categories:${colors.reset}
   development, document, creative, business, productivity
 
 ${colors.bold}Examples:${colors.reset}
-  npx ai-agent-skills browse                              # Interactive browser
-  npx ai-agent-skills install frontend-design             # Install to ALL agents
-  npx ai-agent-skills install pdf --agent cursor          # Install to Cursor only
-  npx ai-agent-skills install pdf --agents claude,cursor  # Install to specific agents
-  npx ai-agent-skills install anthropics/skills           # Install from GitHub
-  npx ai-agent-skills install ./my-skill                  # Install from local path
-  npx ai-agent-skills install pdf --dry-run               # Preview install
+  npx ai-agent-skills browse                                # Interactive browser
+  npx ai-agent-skills install frontend-design               # Install to ALL agents
+  npx ai-agent-skills install pdf --agent cursor            # Install to Cursor only
+  npx ai-agent-skills install pdf --agents claude,cursor    # Install to specific agents
+  npx ai-agent-skills install anthropics/skills             # Install from GitHub
+  npx ai-agent-skills install git@example.com:user/repo.git # Install from any git URL (ssh/https)
+  npx ai-agent-skills install ./my-skill                    # Install from local path
+  npx ai-agent-skills install pdf --dry-run                 # Preview install
   npx ai-agent-skills list --category development
   npx ai-agent-skills search testing
   npx ai-agent-skills update --all
@@ -1488,6 +1814,8 @@ switch (command || 'help') {
     for (const agent of installTargets) {
       if (isLocalPath(param)) {
         installFromLocalPath(param, agent, dryRun);
+      } else if (isGitUrl(param)) {
+        installFromGitUrl(param, agent, dryRun);
       } else if (isGitHubUrl(param)) {
         installFromGitHub(param, agent, dryRun);
       } else {
