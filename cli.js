@@ -27,6 +27,7 @@ const AGENT_PATHS = {
   opencode: path.join(os.homedir(), '.config', 'opencode', 'skill'),
   codex: path.join(os.homedir(), '.codex', 'skills'),
   letta: path.join(os.homedir(), '.letta', 'skills'),
+  kilocode: path.join(os.homedir(), '.kilocode', 'skills'),
   gemini: path.join(os.homedir(), '.gemini', 'skills'),
 };
 
@@ -436,6 +437,7 @@ function showAgentInstructions(agent, skillName, destPath) {
     letta: `The skill is now available in Letta.`,
     goose: `The skill is now available in Goose.`,
     opencode: `The skill is now available in OpenCode.`,
+    kilocode: `The skill is now available in Kilo Code.\nKiloCode will automatically detect and use it.`,
     gemini: `The skill is now available in Gemini CLI.\nMake sure Agent Skills is enabled in your Gemini CLI settings.`
   };
 
@@ -1639,6 +1641,7 @@ ${colors.bold}Agents:${colors.reset} (install targets ALL by default)
   ${colors.cyan}goose${colors.reset}    ~/.config/goose/skills/
   ${colors.cyan}opencode${colors.reset} ~/.opencode/skill/
   ${colors.cyan}letta${colors.reset}    ~/.letta/skills/
+  ${colors.cyan}kilocode${colors.reset} ~/.kilocode/skills/
   ${colors.cyan}project${colors.reset}  .skills/ (portable)
 
 ${colors.bold}Categories:${colors.reset}
